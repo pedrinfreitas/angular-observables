@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Observable, Observer } from 'rxjs';
+import { interval, Observable, Observer, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-basic',
@@ -7,9 +7,18 @@ import { Observable, Observer } from 'rxjs';
   styleUrls: ['./basic.component.css'],
 })
 export class BasicComponent implements OnInit {
+  subscription1: Subscription;
+  subscription2: Subscription;
+  n1: number = 0;
+  n2: number = 0;
+  s1: string = '';
+  s2: string = '';
+
   constructor() {}
 
   ngOnInit(): void {
+    this.s1 = 'Iniciando...'
+    this.s2 = 'Iniciando...'
     const myFirstObservable = new Observable((observer: Observer<number>) => {
       observer.next(1);
       observer.next(2);
@@ -25,5 +34,58 @@ export class BasicComponent implements OnInit {
       (error) => console.error(error),
       () => console.log('complete')
     );
+
+    /*
+    const timerCount = interval(1);
+    timerCount.subscribe(
+      n => console.log(n)
+    );
+    console.log("after interval");
+    */
+
+    const myIntervalObservable = new Observable((observer: Observer<any>) => {
+      let i: number = 0;
+      
+      let id = setInterval(() => {
+        i++;
+        console.log('From Obervable: ', i);
+        if (i == 10) {
+          observer.complete();
+        } else if (i % 2 == 0) {
+          observer.next(i);
+        }
+      }, 1000);
+      return () => {
+        clearInterval(id);
+      }
+    });
+
+    this.subscription1 = myIntervalObservable.subscribe(
+      (_n) => {
+        this.n1 = _n;
+      },
+      (error) => {
+        this.s1 = 'Error: ' + error;
+      },
+      () => {
+        this.s1 = 'Complete';
+      }
+    );
+
+    this.subscription2 = myIntervalObservable.subscribe(
+      (_n) => {
+        this.n2 = _n;
+      },
+      (error) => {
+        this.s2 = 'Error: ' + error;
+      },
+      () => {
+        this.s2 = 'Complete';
+      }
+    );
+    setTimeout(()=>{
+      this.subscription1.unsubscribe();
+      this.subscription2.unsubscribe();
+    }, 11000)
   }
 }
